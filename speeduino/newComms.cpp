@@ -128,13 +128,13 @@ void parseSerial()
     {
       //Timeout occurred
       serialReceivePending = false; //Reset the serial receive
-      sendSerialReturnCode(SERIAL_RC_TIMEOUT);
 
       //Flush the serial buffer
       while(Serial.available() > 0)
       {
         Serial.read();
       }
+      sendSerialReturnCode(SERIAL_RC_TIMEOUT);
     } //Timeout
   } //Data in serial buffer and serial receive in progress
 }
@@ -233,18 +233,7 @@ void processSerialCommand()
       generateLiveValues(0, LOG_ENTRY_SIZE); 
       break;
 
-    case 'b': // New EEPROM burn command to only burn a single page at a time
-
-      if(isEepromWritePending())
-      {
-        //There is already a write pending, force it through. 
-        sendSerialReturnCode(SERIAL_RC_BUSY_ERR);
-        enableForceBurn();
-        writeAllConfig();
-        disableForceBurn();
-        break;
-      }
-
+    case 'b': // New EEPROM burn command to only burn a single page at a time 
       writeConfig(serialPayload[2]); //Read the table number and perform burn. Note that byte 1 in the array is unused
       sendSerialReturnCode(SERIAL_RC_BURN_OK);
       break;
@@ -399,24 +388,12 @@ void processSerialCommand()
         break;
       }
 
-      if(isEepromWritePending())
-      {
-        enableForceBurn();
-        writeConfig(currentPage);
-        disableForceBurn();
-      }
-
-      //page_iterator_t entity = map_page_offset_to_entity(currentPage, valueOffset); 
       for(uint16_t i = 0; i < chunkSize; i++)
       {
         setPageValue(currentPage, (valueOffset + i), serialPayload[7 + i]);
       }
       
-      { 
-        //enableForceBurn();
-        writeConfig(currentPage);
-        //disableForceBurn();
-      }
+      deferEEPROMWrites = true;
       
       sendSerialReturnCode(SERIAL_RC_OK);
       
@@ -456,8 +433,8 @@ void processSerialCommand()
 
     case 'Q': // send code version
     {
-      //char productString[] = { SERIAL_RC_OK, 's','p','e','e','d','u','i','n','o',' ','2','0','2','1','0','9','-','d','e','v'} ; //Note no null terminator in array and statu variable at the start
-      char productString[] = { SERIAL_RC_OK, 's','p','e','e','d','u','i','n','o',' ','2','0','2','2','0','2'} ; //Note no null terminator in array and statu variable at the start
+      char productString[] = { SERIAL_RC_OK, 's','p','e','e','d','u','i','n','o',' ','2','0','2','2','0','4','-','d','e','v'} ; //Note no null terminator in array and statu variable at the start
+      //char productString[] = { SERIAL_RC_OK, 's','p','e','e','d','u','i','n','o',' ','2','0','2','2','0','4'} ; //Note no null terminator in array and statu variable at the start
       sendSerialPayload(&productString, sizeof(productString));
       break;
     }
@@ -606,8 +583,8 @@ void processSerialCommand()
 
     case 'S': // send code version
     {
-      //byte productString[] = { SERIAL_RC_OK, 'S', 'p', 'e', 'e', 'd', 'u', 'i', 'n', 'o', ' ', '2', '0', '2', '1', '.', '0', '9', '-', 'd', 'e', 'v'};
-      byte productString[] = { SERIAL_RC_OK, 'S', 'p', 'e', 'e', 'd', 'u', 'i', 'n', 'o', ' ', '2', '0', '2', '2', '0', '2'};
+      byte productString[] = { SERIAL_RC_OK, 'S', 'p', 'e', 'e', 'd', 'u', 'i', 'n', 'o', ' ', '2', '0', '2', '2', '.', '0', '4', '-', 'd', 'e', 'v'};
+      //byte productString[] = { SERIAL_RC_OK, 'S', 'p', 'e', 'e', 'd', 'u', 'i', 'n', 'o', ' ', '2', '0', '2', '2', '0', '2'};
       sendSerialPayload(&productString, sizeof(productString));
       currentStatus.secl = 0; //This is required in TS3 due to its stricter timings
       break;
