@@ -1,17 +1,36 @@
 #ifndef MATH_H
 #define MATH_H
 
-#include "globals.h"
-
-#define USE_LIBDIVIDE
+#include "src/libdivide/libdivide.h"
 
 int fastMap1023toX(int, int);
-unsigned long percentage(byte, unsigned long);
-unsigned long halfPercentage(byte, unsigned long);
+unsigned long percentage(uint8_t, unsigned long);
+unsigned long halfPercentage(uint8_t, unsigned long);
 inline long powint(int, unsigned int);
-int32_t divs100(int32_t);
-unsigned long divu100(unsigned long);
-uint32_t divu10(uint32_t);
+
+extern struct libdivide::libdivide_u16_t libdiv_u16_100;
+extern struct libdivide::libdivide_s16_t libdiv_s16_100;
+extern struct libdivide::libdivide_u32_t libdiv_u32_100;
+extern struct libdivide::libdivide_s32_t libdiv_s32_100;
+
+inline uint16_t div100(uint16_t n) {
+    return libdivide::libdivide_u16_do(n, &libdiv_u16_100);
+}
+inline int16_t div100(int16_t n) {
+    return libdivide::libdivide_s16_do(n, &libdiv_s16_100);
+}
+inline uint32_t div100(uint32_t n) {
+    return libdivide::libdivide_u32_do(n, &libdiv_u32_100);
+}
+#if defined(__arm__)
+inline int div100(int n) {
+    return libdivide::libdivide_s32_do(n, &libdiv_s32_100);
+}
+#else
+inline int32_t div100(int32_t n) {
+    return libdivide::libdivide_s32_do(n, &libdiv_s32_100);
+}
+#endif
 
 #define DIV_ROUND_CLOSEST(n, d) ((((n) < 0) ^ ((d) < 0)) ? (((n) - (d)/2)/(d)) : (((n) + (d)/2)/(d)))
 
