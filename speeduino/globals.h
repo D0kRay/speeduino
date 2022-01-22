@@ -447,14 +447,18 @@ extern struct table3d8RpmLoad boostTable; //8x8 boost map
 extern struct table3d8RpmLoad vvtTable; //8x8 vvt map
 extern struct table3d8RpmLoad vvt2Table; //8x8 vvt map
 extern struct table3d8RpmLoad wmiTable; //8x8 wmi map
-extern struct table3d6RpmLoad trim1Table; //6x6 Fuel trim 1 map
-extern struct table3d6RpmLoad trim2Table; //6x6 Fuel trim 2 map
-extern struct table3d6RpmLoad trim3Table; //6x6 Fuel trim 3 map
-extern struct table3d6RpmLoad trim4Table; //6x6 Fuel trim 4 map
-extern struct table3d6RpmLoad trim5Table; //6x6 Fuel trim 5 map
-extern struct table3d6RpmLoad trim6Table; //6x6 Fuel trim 6 map
-extern struct table3d6RpmLoad trim7Table; //6x6 Fuel trim 7 map
-extern struct table3d6RpmLoad trim8Table; //6x6 Fuel trim 8 map
+
+typedef table3d6RpmLoad trimTable3d; 
+
+extern trimTable3d trim1Table; //6x6 Fuel trim 1 map
+extern trimTable3d trim2Table; //6x6 Fuel trim 2 map
+extern trimTable3d trim3Table; //6x6 Fuel trim 3 map
+extern trimTable3d trim4Table; //6x6 Fuel trim 4 map
+extern trimTable3d trim5Table; //6x6 Fuel trim 5 map
+extern trimTable3d trim6Table; //6x6 Fuel trim 6 map
+extern trimTable3d trim7Table; //6x6 Fuel trim 7 map
+extern trimTable3d trim8Table; //6x6 Fuel trim 8 map
+
 extern struct table3d4RpmLoad dwellTable; //4x4 Dwell map
 extern struct table2D taeTable; //4 bin TPS Acceleration Enrichment map (2D)
 extern struct table2D maeTable;
@@ -871,8 +875,8 @@ struct config2 {
   byte injAngRPM[4];
 
   byte idleTaperTime;
-  byte dfcoDelay;
-  byte dfcoMinCLT;
+  byte dfcoStartDelay; // Delay time before DFCO starts ramping in
+  byte dfcoMinCLT; // Minimum coolant temperature for DFCO
 
   //VSS Stuff
   byte vssMode : 2; ///< VSS (Vehicle speed sensor) mode (0=none, 1=CANbus, 2,3=Interrupt driven)
@@ -1160,12 +1164,20 @@ struct config9 {
   byte unused10_166;
   byte unused10_167;
   byte unused10_168;
-  byte unused10_169;
-  byte unused10_170;
-  byte unused10_171;
-  byte unused10_172;
-  byte unused10_173;
-  byte unused10_174;
+  byte dfcoAdv; // Spark advance for DFCO entry and exit
+  byte dfcoRampOutTime; // Delay time to ramp spark and apply enrichment on DFCO exit
+  byte dfcoExitFuel; // Fuel enrichment on DFCO exit.
+  byte dfcoRampInTime; // time to ramp spark on DFCO entry
+  byte dfcoMinVss; //Min vehicle speed for DFCO
+  byte dfcoEnblGear1: 1; //DFCO Enable Per Gear
+  byte dfcoEnblGear2: 1; //DFCO Enable Per Gear
+  byte dfcoEnblGear3: 1; //DFCO Enable Per Gear
+  byte dfcoEnblGear4: 1; //DFCO Enable Per Gear
+  byte dfcoEnblGear5: 1; //DFCO Enable Per Gear
+  byte dfcoEnblGear6: 1; //DFCO Enable Per Gear
+  byte dfcoDsblwClutch: 1; //DFCO Disable when clutch pressed (Launch Input)
+  byte dfcoExitFuelTime: 1; // Selects if short (two engine cycles) or long (dfcoRampInTime) for dfcoExitFuel;
+
   byte unused10_175;
   byte unused10_176;
   byte unused10_177;
