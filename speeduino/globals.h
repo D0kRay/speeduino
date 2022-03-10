@@ -225,7 +225,7 @@
 #define BIT_STATUS4_VVT1_ERROR    1 //VVT1 cam angle within limits or not
 #define BIT_STATUS4_VVT2_ERROR    2 //VVT2 cam angle within limits or not
 #define BIT_STATUS4_FAN           3 //Fan Status
-#define BIT_STATUS4_UNUSED5       4
+#define BIT_STATUS4_BURNPENDING   4
 #define BIT_STATUS4_UNUSED6       5
 #define BIT_STATUS4_UNUSED7       6
 #define BIT_STATUS4_UNUSED8       7
@@ -394,6 +394,7 @@
 #define ENGINE_PROTECT_BIT_MAP  1
 #define ENGINE_PROTECT_BIT_OIL  2
 #define ENGINE_PROTECT_BIT_AFR  3
+#define ENGINE_PROTECT_BIT_COOLANT 4
 
 
 #define CALIBRATION_TABLE_SIZE 512 ///< Calibration table size for CLT, IAT, O2
@@ -484,6 +485,7 @@ extern struct table2D knockWindowStartTable;
 extern struct table2D knockWindowDurationTable;
 extern struct table2D oilPressureProtectTable;
 extern struct table2D wmiAdvTable; //6 bin wmi correction table for timing advance (2D)
+extern struct table2D coolantProtectTable; //6 bin coolant temperature protection table for engine protection (2D)
 extern struct table2D fanPWMTable;
 
 //These are for the direct port manipulation of the injectors, coils and aux outputs
@@ -1160,6 +1162,7 @@ struct config9 {
   byte boostByGear6;
 
   byte PWMFanDuty[4];
+
   byte unused10_166;
   byte unused10_167;
   byte unused10_168;
@@ -1178,13 +1181,11 @@ struct config9 {
   byte dfcoExitFuelTime: 1; // Selects if short (two engine cycles) or long (dfcoRampInTime) for dfcoExitFuel;
 
   byte unused10_175;
-  byte unused10_176;
-  byte unused10_177;
-  byte unused10_178;
-  byte unused10_179;
-  byte unused10_180;
-  byte unused10_181;
-  byte unused10_182;
+
+  byte coolantProtEnbl : 1;
+  byte coolantProtRPM[3];
+  byte coolantProtTemp[3];
+
   byte unused10_183;
   byte unused10_184;
   byte unused10_185;
