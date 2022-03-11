@@ -48,6 +48,8 @@
 #define USE_SERIAL3
 
 //When building for Black board Serial1 is instanciated,building generic STM32F4x7 has serial2 and serial 1 must be done here
+//TODO Was macht Serial UART Instance?
+//TODO Serial Uart instance ändert den Serial auf die Serial nummer von instance
 #if SERIAL_UART_INSTANCE==2
 HardwareSerial Serial1(PA10, PA9);
 #endif
@@ -78,7 +80,7 @@ extern "C" char* sbrk(int incr);
   #endif
 #else
   #ifdef USE_SPI_EEPROM
-    #define pinIsReserved(pin)  ( ((pin) == PA11) || ((pin) == PA12) || ((pin) == PB3) || ((pin) == PB4) || ((pin) == PB5) || ((pin) == USE_SPI_EEPROM) ) //Forbiden pins like USB
+    #define pinIsReserved(pin)  ( ((pin) == PA9) || ((pin) == PA10) || ((pin) == PA11) || ((pin) == PA12) || ((pin) == PB3) || ((pin) == PB4) || ((pin) == PB5) || ((pin) == USE_SPI_EEPROM) ) //Forbiden pins like USB
   #else
     #define pinIsReserved(pin)  ( ((pin) == PA11) || ((pin) == PA12) || ((pin) == PB3) || ((pin) == PB4) || ((pin) == PB5) || ((pin) == PB0) ) //Forbiden pins like USB
   #endif

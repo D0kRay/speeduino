@@ -29,7 +29,7 @@ Default CAN3 pins are PA8 & PA15. Alternative (ALT) pins are PB3 & PB4.
     #else //Blue/Black Pills
       SPIClass SPI_for_flash(PB15, PB14, PB13);
     #endif
- 
+//TODO Passt bei der EEPROM Emu alles? 
     //windbond W25Q16 SPI flash EEPROM emulation
     EEPROM_Emulation_Config EmulatedEEPROMMconfig{255UL, 4096UL, 31, 0x00100000UL};
     Flash_SPI_Config SPIconfig{USE_SPI_EEPROM, SPI_for_flash};
