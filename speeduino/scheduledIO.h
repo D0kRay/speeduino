@@ -180,6 +180,43 @@ void tachoOutputOff(void);
 
 //Macros are used to define how each injector control system functions. These are then called by the master openInjectx() function.
 //The DIRECT macros (ie individual pins) are defined below. Others should be defined in their relevant acc_x.h file
+
+#if(defined(CORE_TEENSY) || defined(CORE_STM32))
+#define openInjector1_DIRECT()  { digitalWrite(pinInjector1, HIGH); BIT_SET(currentStatus.status1, BIT_STATUS1_INJ1); }
+#define closeInjector1_DIRECT() { digitalWrite(pinInjector1, LOW);  BIT_CLEAR(currentStatus.status1, BIT_STATUS1_INJ1); }
+#define openInjector2_DIRECT()  { digitalWrite(pinInjector2, HIGH); BIT_SET(currentStatus.status1, BIT_STATUS1_INJ2); }
+#define closeInjector2_DIRECT() { digitalWrite(pinInjector2, LOW);  BIT_CLEAR(currentStatus.status1, BIT_STATUS1_INJ2); }
+#define openInjector3_DIRECT()  { digitalWrite(pinInjector3, HIGH); BIT_SET(currentStatus.status1, BIT_STATUS1_INJ3); }
+#define closeInjector3_DIRECT() { digitalWrite(pinInjector3, LOW);  BIT_CLEAR(currentStatus.status1, BIT_STATUS1_INJ3); }
+#define openInjector4_DIRECT()  { digitalWrite(pinInjector4, HIGH); BIT_SET(currentStatus.status1, BIT_STATUS1_INJ4); }
+#define closeInjector4_DIRECT() { digitalWrite(pinInjector4, LOW);  BIT_CLEAR(currentStatus.status1, BIT_STATUS1_INJ4); }
+#define openInjector5_DIRECT()  { digitalWrite(pinInjector5, HIGH); }
+#define closeInjector5_DIRECT() { digitalWrite(pinInjector5, LOW); }
+#define openInjector6_DIRECT()  { digitalWrite(pinInjector6, HIGH); }
+#define closeInjector6_DIRECT() { digitalWrite(pinInjector6, LOW); }
+#define openInjector7_DIRECT()  { digitalWrite(pinInjector7, HIGH); }
+#define closeInjector7_DIRECT() { digitalWrite(pinInjector7, LOW); }
+#define openInjector8_DIRECT()  { digitalWrite(pinInjector8, HIGH); }
+#define closeInjector8_DIRECT() { digitalWrite(pinInjector8, LOW); }
+
+#define coil1Low_DIRECT()       (digitalWrite(pinCoil1, LOW))
+#define coil1High_DIRECT()      (digitalWrite(pinCoil1, HIGH))
+#define coil2Low_DIRECT()       (digitalWrite(pinCoil2, LOW))
+#define coil2High_DIRECT()      (digitalWrite(pinCoil2, HIGH))
+#define coil3Low_DIRECT()       (digitalWrite(pinCoil3, LOW))
+#define coil3High_DIRECT()      (digitalWrite(pinCoil3, HIGH))
+#define coil4Low_DIRECT()       (digitalWrite(pinCoil4, LOW))
+#define coil4High_DIRECT()      (digitalWrite(pinCoil4, HIGH))
+#define coil5Low_DIRECT()       (digitalWrite(pinCoil5, LOW))
+#define coil5High_DIRECT()      (digitalWrite(pinCoil5, HIGH))
+#define coil6Low_DIRECT()       (digitalWrite(pinCoil6, LOW))
+#define coil6High_DIRECT()      (digitalWrite(pinCoil6, HIGH))
+#define coil7Low_DIRECT()       (digitalWrite(pinCoil7, LOW))
+#define coil7High_DIRECT()      (digitalWrite(pinCoil7, HIGH))
+#define coil8Low_DIRECT()       (digitalWrite(pinCoil8, LOW))
+#define coil8High_DIRECT()      (digitalWrite(pinCoil8, HIGH))
+#else
+
 #define openInjector1_DIRECT()  { *inj1_pin_port |= (inj1_pin_mask); BIT_SET(currentStatus.status1, BIT_STATUS1_INJ1); }
 #define closeInjector1_DIRECT() { *inj1_pin_port &= ~(inj1_pin_mask);  BIT_CLEAR(currentStatus.status1, BIT_STATUS1_INJ1); }
 #define openInjector2_DIRECT()  { *inj2_pin_port |= (inj2_pin_mask); BIT_SET(currentStatus.status1, BIT_STATUS1_INJ2); }
@@ -213,6 +250,7 @@ void tachoOutputOff(void);
 #define coil7High_DIRECT()      (*ign7_pin_port |= (ign7_pin_mask))
 #define coil8Low_DIRECT()       (*ign8_pin_port &= ~(ign8_pin_mask))
 #define coil8High_DIRECT()      (*ign8_pin_port |= (ign8_pin_mask))
+#endif
 
 //Set the value of the coil pins to the coilHIGH or coilLOW state
 #define coil1Charging_DIRECT()      (configPage4.IgInv == GOING_HIGH ? coil1Low_DIRECT() : coil1High_DIRECT())
@@ -232,22 +270,22 @@ void tachoOutputOff(void);
 #define coil8Charging_DIRECT()      (configPage4.IgInv == GOING_HIGH ? coil8Low_DIRECT() : coil8High_DIRECT())
 #define coil8StopCharging_DIRECT()  (configPage4.IgInv == GOING_HIGH ? coil8High_DIRECT() : coil8Low_DIRECT())
 
-#define coil1Charging_MC33810()      if(configPage4.IgInv == GOING_HIGH) { coil1Low_MC33810();  } else { coil1High_MC33810(); }
-#define coil1StopCharging_MC33810()  if(configPage4.IgInv == GOING_HIGH) { coil1High_MC33810(); } else { coil1Low_MC33810();  }
-#define coil2Charging_MC33810()      if(configPage4.IgInv == GOING_HIGH) { coil2Low_MC33810();  } else { coil2High_MC33810(); }
-#define coil2StopCharging_MC33810()  if(configPage4.IgInv == GOING_HIGH) { coil2High_MC33810(); } else { coil2Low_MC33810();  }
-#define coil3Charging_MC33810()      if(configPage4.IgInv == GOING_HIGH) { coil3Low_MC33810();  } else { coil3High_MC33810(); }
-#define coil3StopCharging_MC33810()  if(configPage4.IgInv == GOING_HIGH) { coil3High_MC33810(); } else { coil3Low_MC33810();  }
-#define coil4Charging_MC33810()      if(configPage4.IgInv == GOING_HIGH) { coil4Low_MC33810();  } else { coil4High_MC33810(); }
-#define coil4StopCharging_MC33810()  if(configPage4.IgInv == GOING_HIGH) { coil4High_MC33810(); } else { coil4Low_MC33810();  }
-#define coil5Charging_MC33810()      if(configPage4.IgInv == GOING_HIGH) { coil5Low_MC33810();  } else { coil5High_MC33810(); }
-#define coil5StopCharging_MC33810()  if(configPage4.IgInv == GOING_HIGH) { coil5High_MC33810(); } else { coil5Low_MC33810();  }
-#define coil6Charging_MC33810()      if(configPage4.IgInv == GOING_HIGH) { coil6Low_MC33810();  } else { coil6High_MC33810(); }
-#define coil6StopCharging_MC33810()  if(configPage4.IgInv == GOING_HIGH) { coil6High_MC33810(); } else { coil6Low_MC33810();  }
-#define coil7Charging_MC33810()      if(configPage4.IgInv == GOING_HIGH) { coil7Low_MC33810();  } else { coil7High_MC33810(); }
-#define coil7StopCharging_MC33810()  if(configPage4.IgInv == GOING_HIGH) { coil7High_MC33810(); } else { coil7Low_MC33810();  }
-#define coil8Charging_MC33810()      if(configPage4.IgInv == GOING_HIGH) { coil8Low_MC33810();  } else { coil8High_MC33810(); }
-#define coil8StopCharging_MC33810()  if(configPage4.IgInv == GOING_HIGH) { coil8High_MC33810(); } else { coil8Low_MC33810();  }
+#define coil1Charging_MC33810()      coil1High_MC33810()
+#define coil1StopCharging_MC33810()  coil1Low_MC33810()
+#define coil2Charging_MC33810()      coil2High_MC33810()
+#define coil2StopCharging_MC33810()  coil2Low_MC33810()
+#define coil3Charging_MC33810()      coil3High_MC33810()
+#define coil3StopCharging_MC33810()  coil3Low_MC33810()
+#define coil4Charging_MC33810()      coil4High_MC33810()
+#define coil4StopCharging_MC33810()  coil4Low_MC33810()
+#define coil5Charging_MC33810()      coil5High_MC33810()
+#define coil5StopCharging_MC33810()  coil5Low_MC33810()
+#define coil6Charging_MC33810()      coil6High_MC33810()
+#define coil6StopCharging_MC33810()  coil6Low_MC33810()
+#define coil7Charging_MC33810()      coil7High_MC33810()
+#define coil7StopCharging_MC33810()  coil7Low_MC33810()
+#define coil8Charging_MC33810()      coil8High_MC33810()
+#define coil8StopCharging_MC33810()  coil8Low_MC33810()
 
 #define coil1Toggle_DIRECT() (*ign1_pin_port ^= ign1_pin_mask )
 #define coil2Toggle_DIRECT() (*ign2_pin_port ^= ign2_pin_mask )
