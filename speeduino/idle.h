@@ -23,6 +23,10 @@
 #define STEPPER_BACKWARD 1
 #define IDLE_TABLE_SIZE 10
 
+#define DASHPOD_MINRPMDOT -1000
+#define DASHPOD_IDLEPWMSTEPUP 50
+#define DASHPOD_TAPERTIME 20 //every idle cycle reduced the tampervalue um 1 which equals 0.1s --> 10 = 1 sec
+
 enum StepperStatus {SOFF, STEPPING, COOLING}; //The 2 statuses that a stepper can have. STEPPING means that a high pulse is currently being sent and will need to be turned off at some point.
 
 struct StepperIdle
@@ -69,10 +73,13 @@ uint8_t idleTaper;
 byte idleUpOutputHIGH = HIGH; // Used to invert the idle Up Output 
 byte idleUpOutputLOW = LOW;   // Used to invert the idle Up Output 
 
+uint16_t dashpodTaper;
+
 void initialiseIdle(bool forcehoming);
 void idleControl(void);
 void initialiseIdleUpOutput(void);
 void disableIdle(void);
 void idleInterrupt(void);
+void dashpodFunction(void);
 
 #endif

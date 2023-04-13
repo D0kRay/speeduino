@@ -479,6 +479,9 @@ void idleControl(void)
 
       if(currentStatus.idleUpActive == true) { currentStatus.idleLoad += configPage2.idleUpAdder; } //Add Idle Up amount if active
       
+        //XXX After the PID controller calculated all its load values, we look at the DCC and RPMDOT to start the dashpot function
+        dashpodFunction();
+
       if( currentStatus.idleLoad > 100 ) { currentStatus.idleLoad = 100; } //Safety Check
       idle_pwm_target_value = percentage(currentStatus.idleLoad, idle_pwm_max_count);
       
@@ -584,6 +587,8 @@ void idleControl(void)
           FeedForwardTerm += percentage(configPage2.idleUpAdder, (idle_pwm_max_count<<2));
           if(FeedForwardTerm > (idle_pwm_max_count<<2)) { FeedForwardTerm = (idle_pwm_max_count<<2); }
         }
+        //XXX After the PID controller calculated all its load values, we look at the DCC and RPMDOT to start the dashpot function
+        dashpodFunction();
         
     
         idle_cl_target_rpm = (uint16_t)currentStatus.CLIdleTarget * 10; //Multiply the byte target value back out by 10
@@ -599,6 +604,8 @@ void idleControl(void)
           idle_pwm_target_value = idle_pid_target_value>>2; //increased resolution
           currentStatus.idleLoad = ((unsigned long)(idle_pwm_target_value * 100UL) / idle_pwm_max_count);
         }
+
+
         idleCounter++;
       }
         
@@ -838,6 +845,21 @@ void disableIdle(void)
   }
   BIT_CLEAR(currentStatus.spark, BIT_SPARK_IDLE); //Turn the idle control flag off
   currentStatus.idleLoad = 0;
+}
+
+void dashpodFunction(void)
+{
+  // currentStatus.idleLoad is the dutycycle of the idle valve. If we increase that, we can open the idle valve manually to damp the fast closing throttle event
+  if( (BIT_CHECK(currentStatus.engine, BIT_ENGINE_DCC) == 1) && (currentStatus.rpmDOT < DASHPOD_MINRPMDOT) && (dashpodTaper > 0) )
+  {
+    currentStatus.idleLoad = (uint8_t) ( (percentage(dashpodTaper, DASHPOD_TAPERTIME)) * DASHPOD_IDLEPWMSTEPUP);
+    dashpodTaper--; 
+  } 
+  else if((BIT_CHECK(currentStatus.engine, BIT_ENGINE_DCC) == 1) && (currentStatus.rpmDOT < DASHPOD_MINRPMDOT) && (dashpodTaper < 0))
+  {
+    currentStatus.idleLoad = DASHPOD_IDLEPWMSTEPUP;
+    dashpodTaper = DASHPOD_TAPERTIME;
+  }
 }
 
 #if defined(CORE_AVR) //AVR chips use the ISR for this
