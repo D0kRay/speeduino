@@ -923,6 +923,43 @@ int8_t correctionKnock(int8_t advance)
   return advance - knockRetard;
 }
 
+/**
+ * If there occurs an DCC Event, we want to set the advance in negative areas to get some flames or bangs
+*/
+int8_t correctionDCCAdvance(int8_t advance)
+{
+  int8_t ignDCCValue = advance;
+
+  if(BIT_CHECK(currentStatus.engine, BIT_ENGINE_DCC) == 1) 
+  {
+    BIT_SET(currentStatus.spark2, BIT_SPARK2_FLATSS);
+    ignDCCValue = configPage6.flatSRetard;
+  }
+  else { BIT_CLEAR(currentStatus.spark2, BIT_SPARK2_FLATSS); }
+
+  return ignDCCValue;
+}
+
+/**
+ * If there occurs an ACC Event, we want to reduce the advance a little to prevent knock because 
+ * the fast TPS change causes lean mixtures in the first milliseconds of an ACC Event
+*/
+int8_t correctionACCAdvance(int8_t advance)
+{
+  int8_t ignACCValue = advance;
+
+  if(BIT_CHECK(currentStatus.engine, BIT_ENGINE_ACC) == 1) 
+  {
+    // BIT_SET(currentStatus.spark2, BIT_SPARK2_FLATSS);
+    ignACCValue = ignACCValue - 5;
+  }
+  // else { BIT_CLEAR(currentStatus.spark2, BIT_SPARK2_FLATSS); }
+
+  return ignACCValue;
+}
+
+
+
 /** Ignition Dwell Correction.
  */
 uint16_t correctionsDwell(uint16_t dwell)

@@ -37,6 +37,9 @@ int8_t correctionNitrous(int8_t advance);
 int8_t correctionSoftLaunch(int8_t advance);
 int8_t correctionSoftFlatShift(int8_t advance);
 int8_t correctionKnock(int8_t advance);
+int8_t correctionDCCAdvance(int8_t advance);
+int8_t correctionACCAdvance(int8_t advance);
+
 
 uint16_t correctionsDwell(uint16_t dwell);
 
