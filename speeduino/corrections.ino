@@ -700,6 +700,8 @@ int8_t correctionsIgn(int8_t base_advance)
   advance = correctionNitrous(advance);
   advance = correctionSoftLaunch(advance);
   advance = correctionSoftFlatShift(advance);
+  advance = correctionACCAdvance(advance);
+  advance = correctionDCCAdvance(advance);
   advance = correctionKnock(advance);
 
   //Fixed timing check must go last
