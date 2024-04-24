@@ -32,11 +32,14 @@ There are 2 top level functions that call more detailed corrections for Fuel and
 #include "src/PID_v1/PID_v1.h"
 
 long PID_O2, PID_output, PID_AFRTarget;
+long PID_O2_2, PID_output_2, PID_AFRTarget_2;
+
 /** Instance of the PID object in case that algorithm is used (Always instantiated).
 * Needs to be global as it maintains state outside of each function call.
 * Comes from Arduino (?) PID library.
 */
 PID egoPID(&PID_O2, &PID_output, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
+PID ego2PID(&PID_O2, &PID_output, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
 
 byte activateMAPDOT; //The mapDOT value seen when the MAE was activated. 
 byte activateTPSDOT; //The tpsDOT value seen when the MAE was activated.
@@ -58,6 +61,7 @@ uint8_t dfcoTaper;
 void initialiseCorrections(void)
 {
   egoPID.SetMode(AUTOMATIC); //Turn O2 PID on
+  ego2PID.SetMode(AUTOMATIC); //Turn O2 PID on
   currentStatus.flexIgnCorrection = 0;
   currentStatus.egoCorrection = 100; //Default value of no adjustment must be set to avoid randomness on first correction cycle after startup
   AFRnextCycle = 0;
@@ -606,7 +610,7 @@ byte correctionAFRClosedLoop(void)
     if( (currentStatus.runSecs > configPage6.ego_sdelay) || (configPage2.incorporateAFR == true) ) { currentStatus.afrTarget = get3DTableValue(&afrTable, currentStatus.fuelLoad, currentStatus.RPM); } //Perform the target lookup
   }
   
-  if((configPage6.egoType > 0) && (BIT_CHECK(currentStatus.status1, BIT_STATUS1_DFCO) != 1  ) ) //egoType of 0 means no O2 sensor. If DFCO is active do not run the ego controllers to prevent iterator wind-up.
+  if((configPage6.egoType > 0) && (BIT_CHECK(currentStatus.status1, BIT_STATUS1_DFCO) != 1  ) && BIT_CHECK(currentStatus.engine, BIT_ENGINE_ACC)) //egoType of 0 means no O2 sensor. If DFCO is active do not run the ego controllers to prevent iterator wind-up.
   {
     AFRValue = currentStatus.egoCorrection; //Need to record this here, just to make sure the correction stays 'on' even if the nextCycle count isn't ready
     
@@ -650,10 +654,14 @@ byte correctionAFRClosedLoop(void)
           //PID algorithm
           egoPID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
           egoPID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+          ego2PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+          ego2PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
           PID_O2 = (long)(currentStatus.O2);
           PID_AFRTarget = (long)(currentStatus.afrTarget);
-
+          PID_O2_2 = (long)(currentStatus.O2_2);
+          PID_AFRTarget_2 = (long)(currentStatus.afrTarget);
           bool PID_compute = egoPID.Compute();
+          PID_compute = ego2PID.Compute();
           //currentStatus.egoCorrection = 100 + PID_output;
           if(PID_compute == true) { AFRValue = 100 + PID_output; }
           
