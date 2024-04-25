@@ -97,9 +97,17 @@ uint16_t correctionsFuel(void)
   result = correctionFloodClear();
   if (result != 100) { sumCorrections = div100(sumCorrections * result); }
 
-  currentStatus.egoCorrection = correctionAFRClosedLoop();
-  if (currentStatus.egoCorrection != 100) { sumCorrections = div100(sumCorrections * currentStatus.egoCorrection); }
 
+  if(CAN_WBO_RUSEFI == configPage2.canWBO) 
+  {
+    currentStatus.egoCorrection = correctionAFRClosedLoop(1);
+    currentStatus.egoCorrection_2 = correctionAFRClosedLoop(2);
+  } 
+  else
+  {
+    currentStatus.egoCorrection = correctionAFRClosedLoop(1);
+    if (currentStatus.egoCorrection != 100) { sumCorrections = div100(sumCorrections * currentStatus.egoCorrection); }
+  }
   currentStatus.batCorrection = correctionBatVoltage();
   if (configPage2.battVCorMode == BATTV_COR_MODE_OPENTIME)
   {
@@ -597,7 +605,7 @@ This continues until either:
 PID (Best suited to wideband sensors):
 
 */
-byte correctionAFRClosedLoop(void)
+byte correctionAFRClosedLoop(uint8_t cyl_bank)
 {
   byte AFRValue = 100;
   
@@ -652,19 +660,31 @@ byte correctionAFRClosedLoop(void)
         {
           //*************************************************************************************************************************************
           //PID algorithm
-          egoPID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
-          egoPID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
-          ego2PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
-          ego2PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
-          PID_O2 = (long)(currentStatus.O2);
-          PID_AFRTarget = (long)(currentStatus.afrTarget);
-          PID_O2_2 = (long)(currentStatus.O2_2);
-          PID_AFRTarget_2 = (long)(currentStatus.afrTarget);
-          bool PID_compute = egoPID.Compute();
-          PID_compute = ego2PID.Compute();
+          bool PID_compute = false;
+
+          switch (cyl_bank)
+          {
+          case 1:
+              egoPID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+              egoPID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+              PID_O2 = (long)(currentStatus.O2);
+              PID_AFRTarget = (long)(currentStatus.afrTarget);
+              PID_compute = egoPID.Compute();
+              if(PID_compute == true) { AFRValue = 100 + PID_output; }
+            break;
+          case 2:
+              ego2PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+              ego2PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+              PID_O2_2 = (long)(currentStatus.O2_2);
+              PID_AFRTarget_2 = (long)(currentStatus.afrTarget);
+              PID_compute = ego2PID.Compute();
+              if(PID_compute == true) { AFRValue = 100 + PID_output_2; }
+            break;
+          default:
+          /*Not good*/
+            break;
+          }
           //currentStatus.egoCorrection = 100 + PID_output;
-          if(PID_compute == true) { AFRValue = 100 + PID_output; }
-          
         }
         else { AFRValue = 100; } // Occurs if the egoAlgorithm is set to 0 (No Correction)
       } //Multi variable check 

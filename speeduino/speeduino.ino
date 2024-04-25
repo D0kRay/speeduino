@@ -638,6 +638,16 @@ void loop(void)
                 currentStatus.PW6 = applyFuelTrimToPW(&trim6Table, currentStatus.fuelLoad, currentStatus.RPM, currentStatus.PW6);
               }
 
+              if(configPage2.canWBO == CAN_WBO_RUSEFI) 
+              {
+                currentStatus.PW1 = (unsigned int)percentage(currentStatus.egoCorrection, currentStatus.PW1);
+                currentStatus.PW2 = (unsigned int)percentage(currentStatus.egoCorrection, currentStatus.PW2);
+                currentStatus.PW3 = (unsigned int)percentage(currentStatus.egoCorrection, currentStatus.PW3);
+                currentStatus.PW4 = (unsigned int)percentage(currentStatus.egoCorrection_2, currentStatus.PW4);
+                currentStatus.PW5 = (unsigned int)percentage(currentStatus.egoCorrection_2, currentStatus.PW5);
+                currentStatus.PW6 = (unsigned int)percentage(currentStatus.egoCorrection_2, currentStatus.PW6);
+              }
+
               //Staging is possible with sequential on 8 channel boards by using outputs 7 + 8 for the staged injectors
               #if INJ_CHANNELS >= 8
                 if( (configPage10.stagingEnabled == true) && (BIT_CHECK(currentStatus.status4, BIT_STATUS4_STAGING_ACTIVE) == true) )

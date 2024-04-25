@@ -7,6 +7,10 @@ All functions in the gamma file return
 
 #define IGN_IDLE_THRESHOLD 200 //RPM threshold (below CL idle target) for when ign based idle control will engage
 
+#if defined(NATIVE_CAN_AVAILABLE)
+    #include "comms_CAN.h"
+#endif 
+
 void initialiseCorrections(void);
 uint16_t correctionsFuel(void);
 byte correctionWUE(void); //Warmup enrichment
@@ -14,7 +18,7 @@ uint16_t correctionCranking(void); //Cranking enrichment
 byte correctionASE(void); //After Start Enrichment
 uint16_t correctionAccel(void); //Acceleration Enrichment
 byte correctionFloodClear(void); //Check for flood clear on cranking
-byte correctionAFRClosedLoop(void); //Closed loop AFR adjustment
+byte correctionAFRClosedLoop(uint8_t cyl_bank); //Closed loop AFR adjustment
 byte correctionFlex(void); //Flex fuel adjustment
 byte correctionFuelTemp(void); //Fuel temp correction
 byte correctionBatVoltage(void); //Battery voltage correction
