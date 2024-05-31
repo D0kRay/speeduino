@@ -598,6 +598,12 @@ struct statuses {
   byte VE2;    /**< The VE value from fuel table 2, if in use (and required conditions are met) */
   byte O2;     /**< Primary O2 sensor reading */
   byte O2_2;   /**< Secondary O2 sensor reading */
+  byte O2_3;   /**< Secondary O2 sensor reading */
+  byte O2_4;   /**< Secondary O2 sensor reading */
+  byte O2_5;   /**< Secondary O2 sensor reading */
+  byte O2_6;   /**< Secondary O2 sensor reading */
+  byte O2_7;   /**< Secondary O2 sensor reading */
+  byte O2_8;   /**< Secondary O2 sensor reading */
   int coolant; /**< Coolant temperature reading */
   int cltADC;
   int IAT;     /**< Inlet air temperature reading */
@@ -605,6 +611,12 @@ struct statuses {
   int batADC;
   int O2ADC;
   int O2_2ADC;
+  int O2_3ADC;
+  int O2_4ADC;
+  int O2_5ADC;
+  int O2_6ADC;
+  int O2_7ADC;
+  int O2_8ADC;
   uint16_t dwell;          ///< dwell (coil primary winding/circuit on) time (in ms * 10 ? See @ref correctionsDwell)
   volatile uint16_t actualDwell;    ///< actual dwell time if new ignition mode is used (in uS)
   byte dwellCorrection; /**< The amount of correction being applied to the dwell time (in unit ...). */
@@ -616,6 +628,12 @@ struct statuses {
   uint16_t AEamount;    /**< The amount of acceleration enrichment currently being applied. 100=No change. Varies above 255 */
   byte egoCorrection; /**< The amount of closed loop AFR enrichment currently being applied */
   byte egoCorrection_2; /**< The amount of closed loop AFR enrichment currently being applied */
+  byte egoCorrection_3; /**< The amount of closed loop AFR enrichment currently being applied */
+  byte egoCorrection_4; /**< The amount of closed loop AFR enrichment currently being applied */
+  byte egoCorrection_5; /**< The amount of closed loop AFR enrichment currently being applied */
+  byte egoCorrection_6; /**< The amount of closed loop AFR enrichment currently being applied */
+  byte egoCorrection_7; /**< The amount of closed loop AFR enrichment currently being applied */
+  byte egoCorrection_8; /**< The amount of closed loop AFR enrichment currently being applied */
   byte wueCorrection; /**< The amount of warmup enrichment currently being applied */
   byte batCorrection; /**< The amount of battery voltage enrichment currently being applied */
   byte iatCorrection; /**< The amount of inlet air temperature adjustment currently being applied */
@@ -1101,7 +1119,8 @@ struct config9 {
   byte canoutput_param_num_bytes[8];
 
   byte unused10_110;
-  byte unused10_111;
+  // byte unused10_111;
+  byte egoSensorAmount;
   byte egoMAPMax; //needs to be multiplied by 2 to get the proper value
   byte egoMAPMin; //needs to be multiplied by 2 to get the proper value
   byte speeduino_tsCanId:4;         //speeduino TS canid (0-14)
