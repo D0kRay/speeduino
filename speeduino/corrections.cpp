@@ -32,14 +32,51 @@ There are 2 top level functions that call more detailed corrections for Fuel and
 #include "src/PID_v1/PID_v1.h"
 
 long PID_O2, PID_output, PID_AFRTarget;
-long PID_O2_2, PID_output_2, PID_AFRTarget_2;
+PID egoPID(&PID_O2, &PID_output, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
+
+// Ich biete die möglichkeit für jeden zylinder eine eigene Lambdaregelung zu implementieren. 
+// was wichtig zu wissen wäre -> wie viel zeit kostet die compute der PID Regler? Wenn das nicht viel ist, dann jeden zylinder einzeln. Falls zu viel, dann muss auf die anzahl der Sonden reduziert werden.
+// Dazu dann in ts eine ansicht wo jedem zylinder die lambda zugewiesen werden kann.
+#if INJ_CHANNELS >= 2
+  long PID_O2_2, PID_output_2;
+  PID ego2PID(&PID_O2_2, &PID_output_2, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
+#endif /* INJ_CHANNELS >= 2 */
+
+#if INJ_CHANNELS >= 3
+  long PID_O2_3, PID_output_3;
+  PID ego3PID(&PID_O2_3, &PID_output_3, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
+#endif /* INJ_CHANNELS >= 3 */
+
+#if INJ_CHANNELS >= 4
+  long PID_O2_4, PID_output_4;
+  PID ego4PID(&PID_O2_4, &PID_output_4, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
+#endif /* INJ_CHANNELS >= 4 */
+
+#if INJ_CHANNELS >= 5
+  long PID_O2_5, PID_output_5;
+  PID ego5PID(&PID_O2_5, &PID_output_5, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
+#endif /* INJ_CHANNELS >= 5 */
+
+#if INJ_CHANNELS >= 6
+  long PID_O2_6, PID_output_6;
+  PID ego6PID(&PID_O2_6, &PID_output_6, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
+#endif /* INJ_CHANNELS >= 6 */
+
+#if INJ_CHANNELS >= 7
+  long PID_O2_7, PID_output_7;
+  PID ego7PID(&PID_O2_7, &PID_output_7, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
+#endif /* INJ_CHANNELS >= 7 */
+
+#if INJ_CHANNELS >= 8
+  long PID_O2_8, PID_output_8;
+  PID ego8PID(&PID_O2, &PID_output_8, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
+#endif /* INJ_CHANNELS >= 8 */
+
 
 /** Instance of the PID object in case that algorithm is used (Always instantiated).
 * Needs to be global as it maintains state outside of each function call.
 * Comes from Arduino (?) PID library.
 */
-PID egoPID(&PID_O2, &PID_output, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
-PID ego2PID(&PID_O2, &PID_output, &PID_AFRTarget, configPage6.egoKP, configPage6.egoKI, configPage6.egoKD, REVERSE);
 
 byte activateMAPDOT; //The mapDOT value seen when the MAE was activated. 
 byte activateTPSDOT; //The tpsDOT value seen when the MAE was activated.
@@ -97,15 +134,16 @@ uint16_t correctionsFuel(void)
   result = correctionFloodClear();
   if (result != 100) { sumCorrections = div100(sumCorrections * result); }
 
-
+  // TODO @author drray change the guard to a setting that can be explicitly set in tunerstudio. also change the amount of possible ego corrections to the amount of cylinders the ecu can max have  
   if(CAN_WBO_RUSEFI == configPage2.canWBO) 
   {
-    currentStatus.egoCorrection = correctionAFRClosedLoop(1);
-    currentStatus.egoCorrection_2 = correctionAFRClosedLoop(2);
+    // We dont need to add the ego correction to the sumCorrections because we need to add this later in the calculation for every single injector
+    currentStatus.egoCorrection = correctionAFRClosedLoop();
+    currentStatus.egoCorrection_2 = correctionAFRClosedLoop();
   } 
   else
   {
-    currentStatus.egoCorrection = correctionAFRClosedLoop(1);
+    currentStatus.egoCorrection = correctionAFRClosedLoop();
     if (currentStatus.egoCorrection != 100) { sumCorrections = div100(sumCorrections * currentStatus.egoCorrection); }
   }
   currentStatus.batCorrection = correctionBatVoltage();
@@ -605,7 +643,7 @@ This continues until either:
 PID (Best suited to wideband sensors):
 
 */
-byte correctionAFRClosedLoop(uint8_t cyl_bank)
+byte correctionAFRClosedLoop(void)
 {
   byte AFRValue = 100;
   
@@ -661,28 +699,78 @@ byte correctionAFRClosedLoop(uint8_t cyl_bank)
           //*************************************************************************************************************************************
           //PID algorithm
           bool PID_compute = false;
-
-          switch (cyl_bank)
+          for(uint8_t sensorCount = 0; sensorCount < configPage9.egoSensorAmount; sensorCount++) 
           {
-          case 1:
-              egoPID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
-              egoPID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
-              PID_O2 = (long)(currentStatus.O2);
-              PID_AFRTarget = (long)(currentStatus.afrTarget);
-              PID_compute = egoPID.Compute();
-              if(PID_compute == true) { AFRValue = 100 + PID_output; }
-            break;
-          case 2:
-              ego2PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
-              ego2PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
-              PID_O2_2 = (long)(currentStatus.O2_2);
-              PID_AFRTarget_2 = (long)(currentStatus.afrTarget);
-              PID_compute = ego2PID.Compute();
-              if(PID_compute == true) { AFRValue = 100 + PID_output_2; }
-            break;
-          default:
-          /*Not good*/
-            break;
+            switch (sensorCount)
+            {
+            case 1:
+                egoPID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+                egoPID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+                PID_O2 = (long)(currentStatus.O2);
+                PID_AFRTarget = (long)(currentStatus.afrTarget);
+                PID_compute = egoPID.Compute();
+                if(PID_compute == true) { AFRValue = 100 + PID_output; }
+              break;
+            case 2:
+                ego2PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+                ego2PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+                PID_O2_2 = (long)(currentStatus.O2_2);
+                PID_AFRTarget = (long)(currentStatus.afrTarget);
+                PID_compute = ego2PID.Compute();
+                if(PID_compute == true) { AFRValue = 100 + (PID_output + PID_output_2) / 2U; }
+              break;
+            case 3:
+                ego3PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+                ego3PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+                PID_O2_3 = (long)(currentStatus.O2_3);
+                PID_AFRTarget = (long)(currentStatus.afrTarget);
+                PID_compute = ego3PID.Compute();
+                if(PID_compute == true) { AFRValue = 100 + (PID_output_3 + PID_output + PID_output_2) / 3U; }
+              break;
+            case 4:
+                ego4PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+                ego4PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+                PID_O2_4 = (long)(currentStatus.O2_4);
+                PID_AFRTarget = (long)(currentStatus.afrTarget);
+                PID_compute = ego4PID.Compute();
+                if(PID_compute == true) { AFRValue = 100 + (PID_output_4 + PID_output_3 + PID_output + PID_output_2) / 4U; }
+              break;
+            case 5:
+                ego5PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+                ego5PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+                PID_O2_5 = (long)(currentStatus.O2_5);
+                PID_AFRTarget = (long)(currentStatus.afrTarget);
+                PID_compute = ego5PID.Compute();
+                if(PID_compute == true) { AFRValue = 100 + (PID_output_5 + PID_output_4 + PID_output_3 + PID_output + PID_output_2) / 5U; }
+              break;
+            case 6:
+                ego6PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+                ego6PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+                PID_O2_6 = (long)(currentStatus.O2_6);
+                PID_AFRTarget = (long)(currentStatus.afrTarget);
+                PID_compute = ego6PID.Compute();
+                if(PID_compute == true) { AFRValue = 100 + (PID_output_6 + PID_output_5 + PID_output_4 + PID_output_3 + PID_output + PID_output_2) / 6U; }
+              break;
+            case 7:
+                ego7PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+                ego7PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+                PID_O2_7 = (long)(currentStatus.O2_7);
+                PID_AFRTarget = (long)(currentStatus.afrTarget);
+                PID_compute = ego7PID.Compute();
+                if(PID_compute == true) { AFRValue = 100 + (PID_output_7 + PID_output_6 + PID_output_5 + PID_output_4 + PID_output_3 + PID_output + PID_output_2) / 7U; }
+              break;
+            case 8:
+                ego8PID.SetOutputLimits((long)(-configPage6.egoLimit), (long)(configPage6.egoLimit)); //Set the limits again, just in case the user has changed them since the last loop. Note that these are sent to the PID library as (Eg:) -15 and +15
+                ego8PID.SetTunings(configPage6.egoKP, configPage6.egoKI, configPage6.egoKD); //Set the PID values again, just in case the user has changed them since the last loop
+                PID_O2_8 = (long)(currentStatus.O2_8);
+                PID_AFRTarget = (long)(currentStatus.afrTarget);
+                PID_compute = ego8PID.Compute();
+                if(PID_compute == true) { AFRValue = 100 + (PID_output_8 + PID_output_7 + PID_output_6 + PID_output_5 + PID_output_4 + PID_output_3 + PID_output + PID_output_2) / 8U; }
+              break;
+            default:
+            /*Not good*/
+              break;
+            }
           }
           //currentStatus.egoCorrection = 100 + PID_output;
         }
