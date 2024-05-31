@@ -2568,7 +2568,7 @@ void setPinMapping(byte boardID)
         // = PB4;  //(DO NOT USE FOR SPEEDUINO) SPI1_MISO FLASH CHIP
         // = PB5;  //(DO NOT USE FOR SPEEDUINO) SPI1_MOSI FLASH CHIP
         // = PB6;  //NRF_CE
-        // = PB7;  //NRF_CS
+        pinCoil6 = PB7;  //NRF_CS
         // = PB8;  //NRF_IRQ
         pinCoil2 = PB9; //
         // = PB9;  //
@@ -3394,6 +3394,21 @@ void initialiseTriggers(void)
 
       attachInterrupt(triggerInterrupt, triggerHandler, primaryTriggerEdge);
       attachInterrupt(triggerInterrupt2, triggerSecondaryHandler, secondaryTriggerEdge);
+      break;
+
+    case DECODER_HONDA_J32:
+      triggerSetup_HondaJ32();
+      triggerHandler = triggerPri_HondaJ32;
+      triggerSecondaryHandler = triggerSec_HondaJ32;
+      getRPM = getRPM_HondaJ32;
+      getCrankAngle = getCrankAngle_HondaJ32;
+      triggerSetEndTeeth = triggerSetEndTeeth_HondaJ32;
+
+      primaryTriggerEdge = RISING; // Don't honor the config, always use rising edge 
+      secondaryTriggerEdge = RISING; // Unused
+
+      attachInterrupt(triggerInterrupt, triggerHandler, primaryTriggerEdge);
+      attachInterrupt(triggerInterrupt2, triggerSecondaryHandler, secondaryTriggerEdge);  // Suspect this line is not needed
       break;
 
     case DECODER_MIATA_9905:
