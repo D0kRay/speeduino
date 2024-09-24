@@ -627,7 +627,11 @@ void loop(void)
               injector4StartAngle = calculateInjectorStartAngle(PWdivTimerPerDegree, channel4InjDegrees, currentStatus.injAngle);
               injector5StartAngle = calculateInjectorStartAngle(PWdivTimerPerDegree, channel5InjDegrees, currentStatus.injAngle);
               injector6StartAngle = calculateInjectorStartAngle(PWdivTimerPerDegree, channel6InjDegrees, currentStatus.injAngle);
-
+              /* XXX Entweder ich lese das falsch aber folgender Programmablauf: PW1 wird berechnet -> PW1 wird für die Berechnung von PWdivTimerPerDegree verwendet
+                 -> PWdivTimerPerDegree wird für die Berechnung aller InjectorStartAngles verwendet -> Im nachgang wird aber die PW jedes Injectors verändert im TrimTable
+                 Ist das gewollt ??? Da somit der Startzeitpunkt eigentlich nicht mehr der gleiche ist, wenn die PW durch die TrimTable hoch oder runter geschraubt wird.
+                 Das führt dann zu falschen einspritzstartzeitpunkten -> Problem?!? 
+              */
               if(configPage6.fuelTrimEnabled > 0)
               {
                 currentStatus.PW1 = applyFuelTrimToPW(&trim1Table, currentStatus.fuelLoad, currentStatus.RPM, currentStatus.PW1);
@@ -637,7 +641,11 @@ void loop(void)
                 currentStatus.PW5 = applyFuelTrimToPW(&trim5Table, currentStatus.fuelLoad, currentStatus.RPM, currentStatus.PW5);
                 currentStatus.PW6 = applyFuelTrimToPW(&trim6Table, currentStatus.fuelLoad, currentStatus.RPM, currentStatus.PW6);
               }
-
+              /*
+              TODO In theory we only use PW1 for all pulsewidths. For individual lambda correction we need the same logic as the fueltrim tables but with the ego corrections
+              Here we have to disable the ego correction in the first place when PW1 is calculated. After that we can use the calculated PW1 to add the ego correction of every individual 
+              cylinder lambda to the according PW.
+              */
               if(configPage2.canWBO == CAN_WBO_RUSEFI) 
               {
                 currentStatus.PW1 = (unsigned int)percentage(currentStatus.egoCorrection, currentStatus.PW1);
